@@ -27,6 +27,11 @@ let filterExel = function (req, file, cb) {
         cb(new Error("file khong dung dinh dang"))
     }
 }
+let filterFile = function (req, file, cb) {
+    // Cho phép upload mọi file (hoặc giới hạn tuỳ ý)
+    cb(null, true);
+}
+
 module.exports = {
     uploadImage: multer({
         storage: storage,
@@ -37,5 +42,10 @@ module.exports = {
         storage: storage,
         limits: 5 * 1024 * 1024,
         fileFilter: filterExel
+    }),
+    uploadFile: multer({
+        storage: storage,
+        limits: 10 * 1024 * 1024, // 10MB limit
+        fileFilter: filterFile
     })
 }
