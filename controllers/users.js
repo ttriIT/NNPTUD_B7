@@ -137,6 +137,14 @@ module.exports = {
                 let username = rowValues[1];
                 let email = rowValues[2];
 
+                // Mở rộng việc trích xuất giá trị trường hợp user dùng công thức (formula) hoặc có link
+                if (username && typeof username === 'object') {
+                    username = username.result || username.text || String(username);
+                }
+                if (email && typeof email === 'object') {
+                    email = email.result || email.text || String(email);
+                }
+
                 if (!username || !email) continue;
 
                 // check if user exists
@@ -156,8 +164,15 @@ module.exports = {
                 await newUser.save();
                 successCount++;
 
-                // Send email
-                await mailUtils.sendPasswordMail(email, password);
+                // Gửi email, đồng thời try-catch để nếu có lỗi limit từ Mailtrap thì không làm crash toàn bộ tiến trình
+                try {
+                    await mailUtils.sendPasswordMail(email, password);
+                    
+                    // Delay 500ms mỗi lần gửi email để tránh lỗi "Too many emails per second" của bản free
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (emailErr) {
+                    console.error("Lỗi gửi email cho " + email + ":", emailErr.message);
+                }
             }
 
             // Remove file after processing
